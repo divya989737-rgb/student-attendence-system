@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Student Attendance System</title>
+<style>
+body{font-family:Arial;background:#eef2f3;padding:20px}
+.container{max-width:900px;margin:auto;background:#fff;padding:20px;border-radius:10px}
+h2,h3{text-align:center}
+input,select,button{padding:8px;margin:5px;width:100%}
+button{background:#28a745;color:#fff;border:none;cursor:pointer}
+button:hover{background:#218838}
+table{width:100%;border-collapse:collapse;margin-top:20px}
+th,td{border:1px solid #ccc;padding:8px;text-align:center}
+th{background:#333;color:#fff}
+.date{font-weight:bold;text-align:center}
+</style>
+</head>
+<body>
+<div class="container">
+<h2>Student Attendance System</h2>
+<div class="date">Date: <span id="today"></span></div>
+
+<h3>Add Student</h3>
+<input type="text" id="roll" placeholder="Roll Number">
+<input type="text" id="name" placeholder="Student Name">
+<input type="text" id="class" placeholder="Class">
+<button onclick="addStudent()">Add Student</button>
+
+<h3>Mark Attendance</h3>
+<table>
+<thead>
+<tr>
+<th>Roll</th>
+<th>Name</th>
+<th>Class</th>
+<th>Status</th>
+<th>Attendance %</th>
+</tr>
+</thead>
+<tbody id="studentTable"></tbody>
+</table>
+
+<button onclick="saveAttendance()">Save Attendance</button>
+</div>
+
+<script>
+let students = JSON.parse(localStorage.getItem('students')) || [];
+let attendance = JSON.parse(localStorage.getItem('attendance')) || {};
+
+let today = new Date().toISOString().split('T')[0];
+document.getElementById('today').innerText = today;
+
+function addStudent(){
+ let roll = document.getElementById('roll').value;
+ let name = document.getElementById('name').value;
+ let className = document.getElementById('class').value;
+ if(roll==""||name==""||className==""){alert('All fields required');return;}
+ students.push({roll,name,className});
+ localStorage.setItem('students',JSON.stringify(students));
+ displayStudents();
+ document.getElementById('roll').value="";
+ document.getElementById('name').value="";
+ document.getElementById('class').value="";
+}
+
+function displayStudents(){
+ let table = document.getElementById('studentTable');
+ table.innerHTML="";
+ students.forEach((s,i)=>{
+ let total = attendance[s.roll]?.total || 0;
+ let present = attendance[s.roll]?.present || 0;
+ let percent = total ? Math.round((present/total)*100) : 0;
+ table.innerHTML += `
+ <tr>
+ <td>${s.roll}</td>
+ <td>${s.name}</td>
+ <td>${s.className}</td>
+ <td>
+ <select id="status${i}">
+ <option value="Present">Present</option>
+ <option value="Absent">Absent</option>
+ </select>
+ </td>
+ <td>${percent}%</td>
+ </tr>`;
+ });
+}
+
+function saveAttendance(){
+ students.forEach((s,i)=>{
+ let status = document.getElementById('status'+i).value;
+ if(!attendance[s.roll]) attendance[s.roll]={present:0,total:0};
+ attendance[s.roll].total++;
+ if(status==='Present') attendance[s.roll].present++;
+ });
+ localStorage.setItem('attendance',JSON.stringify(attendance));
+ alert('Attendance Saved');
+ displayStudents();
+}
+
+displayStudents();
+</script>
+</body>
+</html>
